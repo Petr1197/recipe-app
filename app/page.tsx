@@ -1,101 +1,102 @@
-import Image from "next/image";
+// app/page.tsx
+"use client";
+
+// import Image from "next/image";
+import { useEffect, useState } from "react";
+// import Search from "./components/Search";
+import Pantry from "./components/Pantry";
+import RecipeCard from "./components/RecipeCard";
+
+type Recipe = {
+  recipe: {
+    label: string;
+    image: string;
+    url: string;
+    source: string;
+  };
+};
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [searchEntry, setSearchEntry] = useState("");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  let timeoutId: NodeJS.Timeout;
+
+  const handleSearch = async (query: string) => {
+    const response = await fetch(`/api/search?query=${query}`);
+    const data = await response.json();
+    setRecipes(data);
+  };
+
+  const handleSearchWithPantry = async (pantryItems: string[]) => {
+    const query = pantryItems.join(",");
+    await handleSearch(query);
+  };
+
+  const autoSearch = async (searchQuery: string) => {
+    setSearchEntry(searchQuery);
+    clearTimeout(timeoutId);
+
+    timeoutId = setTimeout(() => {
+      handleSearch(searchEntry);
+    }, 1000);
+  };
+
+  useEffect(() => {
+    // Optional: clear the timeout on component unmount to avoid memory leaks
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+  return (
+    <div className="main px-6">
+      <header className="p-4">
+        <ul className="flex justify-around">
+          <li>
+            {/* <Search onSearch={handleSearch} /> */}
+            <input
+              className="w-full focus:outline-none"
+              type="text"
+              name="searchInput"
+              id="searchInput"
+              placeholder="Search for recipe.."
+              value={searchEntry}
+              onChange={(e) => autoSearch(e.target.value)}
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+          </li>
+        </ul>
+      </header>
+      <h1 className="font-bold text-2xl text-center">Recipes</h1>
+      <main className="">
+        <div>
+          <Pantry onSearchWithPantry={handleSearchWithPantry} />
+        </div>
+        <div className="flex flex-wrap gap-12 justify-center">
+          {recipes.length > 0 ? (
+            recipes.map((recipeData, index) => (
+              <RecipeCard key={index} recipe={recipeData.recipe} />
+              // <div className="max-w-[350px] relative" key={index}>
+              //   <a href={recipeData.recipe.url}>
+              //     <Image
+              //       src={recipeData.recipe.image}
+              //       alt={recipeData.recipe.label}
+              //       width={350}
+              //       height={350}
+              //     />
+              //     <div className="px-4 py-2 absolute bottom-0 left-0 right-0 text-white bg-gray-600 bg-opacity-70">
+              //       <h3 className="font-bold text-xl">
+              //         {recipeData.recipe.label}
+              //       </h3>
+              //       <p className="text-lg">- {recipeData.recipe.source}</p>
+              //     </div>
+              //   </a>
+              // </div>
+            ))
+          ) : (
+            <p>No recipes found</p>
+          )}
         </div>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      <footer></footer>
     </div>
   );
 }
